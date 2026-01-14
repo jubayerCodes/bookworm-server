@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
-import { AuthServices } from "./auth.services";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { setAuthCookie } from "../../utils/setCookie";
 import { JwtPayload } from "jsonwebtoken";
+import { getUserFromReq } from "../../utils/getUserFromReq";
+import { AuthServices } from "./auth.services";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const credentialsLogin = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
@@ -65,7 +66,7 @@ const logout = catchAsync(async (req: Request, res: Response, next: NextFunction
 const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const newPassword = req.body.newPassword;
   const oldPassword = req.body.oldPassword;
-  const decodedToken = req.user;
+  const decodedToken = getUserFromReq(req);
 
   await AuthServices.resetPassword(oldPassword, newPassword, decodedToken as JwtPayload);
 

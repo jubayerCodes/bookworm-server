@@ -3,6 +3,9 @@ import { ZodError } from "zod";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
 import handleZodError from "../errorHelpers/handleZodError";
+import handleValidationError from "../errorHelpers/handleValidationError";
+import handleCastError from "../errorHelpers/handleCastError";
+import handleDuplicateError from "../errorHelpers/handleDuplicateError";
 import { TErrorSources } from "../interfaces/error.interface";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -16,6 +19,21 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
     statusCode = simplifiedError.statusCode;
     message = simplifiedError.message;
     errorSources = simplifiedError.errorSources;
+  } else if (err?.name === "ValidationError") {
+    const simplifiedError = handleValidationError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources;
+  } else if (err?.name === "CastError") {
+    const simplifiedError = handleCastError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources;
+  } else if (err?.code === 11000) {
+    const simplifiedError = handleDuplicateError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources;
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
@@ -24,10 +42,11 @@ export const globalErrorHandler = (err: any, req: Request, res: Response, next: 
   }
 
   res.status(statusCode).json({
+    status: statusCode,
     success: false,
     message,
-    errorSources,
-    err,
+    errorSources: envVars?.NODE_ENV === "development" ? errorSources : null,
+    err: envVars?.NODE_ENV === "development" ? err : null,
     stack: envVars?.NODE_ENV === "development" ? err?.stack : null,
   });
 };

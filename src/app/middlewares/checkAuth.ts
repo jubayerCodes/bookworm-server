@@ -4,12 +4,13 @@ import AppError from "../errorHelpers/AppError";
 import { verifyToken } from "../utils/jwt";
 import { envVars } from "../config/env";
 import { JwtPayload } from "jsonwebtoken";
+import { setUserToReq } from "../utils/getUserFromReq";
 
 export const checkAuth =
   (...authRoles: Role[]) =>
   async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization;
+      const token = req.cookies.accessToken;
 
       if (!token) {
         throw new AppError(403, "No token found");
@@ -20,6 +21,8 @@ export const checkAuth =
       if (!authRoles.includes(verifiedToken.role)) {
         throw new AppError(403, "You are not authorized to access this route");
       }
+
+      setUserToReq(req, verifiedToken);
 
       next();
     } catch (error) {

@@ -18,7 +18,7 @@ const jwt_1 = require("../utils/jwt");
 const env_1 = require("../config/env");
 const checkAuth = (...authRoles) => (req, _res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const token = req.headers.authorization;
+        const token = req.cookies.accessToken;
         if (!token) {
             throw new AppError_1.default(403, "No token found");
         }
@@ -26,6 +26,7 @@ const checkAuth = (...authRoles) => (req, _res, next) => __awaiter(void 0, void 
         if (!authRoles.includes(verifiedToken.role)) {
             throw new AppError_1.default(403, "You are not authorized to access this route");
         }
+        req.user = verifiedToken;
         next();
     }
     catch (error) {
